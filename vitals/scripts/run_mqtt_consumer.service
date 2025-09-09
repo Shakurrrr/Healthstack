@@ -1,0 +1,20 @@
+[Unit]
+Description=MQTT Consumer -> Django pipeline (healthstack)
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/healthstack
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/etc/default/healthstack
+ExecStart=/srv/healthstack/.venv/bin/python manage.py run_mqtt_consumer
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

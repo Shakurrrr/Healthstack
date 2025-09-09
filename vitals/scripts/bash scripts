@@ -1,0 +1,9 @@
+sudo cp scripts/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+sudo systemctl enable gunicorn celery-worker celery-beat run_mqtt_consumer
+sudo systemctl start  gunicorn celery-worker celery-beat run_mqtt_consumer
+
+# check
+sudo systemctl status gunicorn --no-pager
+journalctl -u gunicorn -f

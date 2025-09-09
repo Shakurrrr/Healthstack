@@ -1,0 +1,24 @@
+[Unit]
+Description=Celery Worker for healthstack
+After=network-online.target redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/healthstack
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/etc/default/healthstack
+ExecStart=/srv/healthstack/.venv/bin/celery \
+  -A healthstack worker \
+  --loglevel=INFO \
+  --hostname=worker@%H \
+  --concurrency=4
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
