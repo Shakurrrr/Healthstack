@@ -1,0 +1,103 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Doctor's Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{font-family:system-ui,Arial; margin:20px;}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+    .card{border:1px solid #e3e3e3; border-radius:10px; padding:16px;}
+    .row{display:flex; gap:12px; align-items:center;}
+    select{padding:6px 10px;}
+  </style>
+</head>
+<body>
+  <h2>Doctor's Dashboard</h2>
+  <div class="row">
+    <label>Athlete:</label>
+    <select id="athlete">
+      {% for a in athletes %}
+        <option value="{{ a.external_id }}">{{ a.name }} ({{ a.external_id }})</option>
+      {% endfor %}
+    </select>
+    <button id="refresh">Refresh</button>
+  </div>
+
+  <div class="grid" style="margin-top:16px;">
+    <div class="card">
+      <h3>Heart Rate (bpm)</h3>
+      <canvas id="hrChart" height="120"></canvas>
+    </div>
+    <div class="card">
+      <h3>SpO₂ (%)</h3>
+      <canvas id="spo2Chart" height="120"></canvas>
+    </div>
+    <div class="card">
+      <h3>Temperature (°C)</h3>
+      <canvas id="tempChart" height="120"></canvas>
+    </div>
+    <div class="card">
+      <h3>Recent Alerts</h3>
+      <ul id="alerts"></ul>
+    </div>
+  </div>
+
+<script>
+async function fetchJSON(url, token=null){
+  const headers = token ? {"Authorization": "Bearer " + token} : {};
+  const res = await fetch(url, {headers});
+  return await res.json();
+}
+let token = null;
+
+async function ensureToken(){
+  if (token) return token;
+  // for demo, admin user credentials could be used; in prod, handle via login/session
+  // replace with your own JWT retrieval flow or exempt /api/readings for session auth
+  return null; // using session-authenticated view is fine if you protect endpoints accordingly
+}
+
+function lineChart(ctx,label){
+  return new Chart(ctx, {
+    type: 'line',
+    data: {labels:[], datasets:[{label, data:[], tension:0.1, pointRadius:0}]},
+    options: {animation:false, scales:{x:{display:false}}}
+  });
+}
+
+const hrChart   = lineChart(document.getElementById('hrChart'), 'bpm');
+const spo2Chart = lineChart(document.getElementById('spo2Chart'), '%');
+const tempChart = lineChart(document.getElementById('tempChart'), '°C');
+
+async function refresh(){
+  const athlete = document.getElementById('athlete').value;
+  const t = await ensureToken();
+  const base = `/api/readings/?athlete=${athlete}`;
+  const rs = await fetchJSON(base, t);
+
+  const labels = rs.map(r => r.timestamp).reverse();
+  const hr  = rs.map(r => r.heart_rate_bpm).reverse();
+  const sp  = rs.map(r => r.spo2_percent).reverse();
+  const tc  = rs.map(r => r.temperature_c).reverse();
+
+  hrChart.data.labels = labels; hrChart.data.datasets[0].data = hr; hrChart.update();
+  spo2Chart.data.labels = labels; spo2Chart.data.datasets[0].data = sp; spo2Chart.update();
+  tempChart.data.labels = labels; tempChart.data.datasets[0].data = tc; tempChart.update();
+
+  const alerts = await fetchJSON(`/api/alerts/?athlete=${athlete}`, t);
+  const ul = document.getElementById('alerts'); ul.innerHTML = '';
+  alerts.forEach(a => {
+    const li = document.createElement('li');
+    li.textContent = `[${a.level}] ${a.message} @ ${new Date(a.created_at).toLocaleString()}`;
+    ul.appendChild(li);
+  });
+}
+
+document.getElementById('refresh').addEventListener('click', refresh);
+setInterval(refresh, 5000);
+refresh();
+</script>
+</body>
+</html>
