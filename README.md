@@ -36,7 +36,7 @@ It integrates **embedded sensors (MAX30102, DS18B20)** with a **Raspberry Pi edg
 
 ## 📂 Repository Structure
 
-``plaintext
+```plaintext
 healthstack/
 ├── vitals/                 # Django app for vital readings
 ├── dashboard/              # Doctor’s dashboard UI
@@ -49,6 +49,7 @@ healthstack/
 ├── drivers/                # Custom Python drivers (MAX30102, etc.)
 ├── requirements.txt
 └── README.md
+
 
 ---
 
