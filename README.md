@@ -64,13 +64,13 @@ pip install -r requirements.txt
 
 ##   Start services
 
-# Backend API
+- **Backend API**
 python manage.py runserver
 
-# Celery worker
+- **Celery worker**
 celery -A healthstack.celery:app worker -l info
 
-# Celery beat (scheduler)
+- **Celery beat (scheduler)**
 celery -A healthstack.celery:app beat -l info
 
 ---
@@ -103,10 +103,10 @@ System Services: systemd for Gunicorn, Celery, MQTT consumer
 
 sudo cp scripts/*.service /etc/systemd/system/
 
-# Reload systemd
+- **Reload systemd**
 sudo systemctl daemon-reload
 
-# Enable and start
+- **Enable and start**
 sudo systemctl enable gunicorn celery-worker celery-beat run_mqtt_consumer
 sudo systemctl start gunicorn celery-worker celery-beat run_mqtt_consumer
 
